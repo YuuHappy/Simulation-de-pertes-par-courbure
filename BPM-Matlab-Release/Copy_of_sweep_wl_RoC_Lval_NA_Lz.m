@@ -21,7 +21,7 @@ Lz_values     = linspace(1e-2, 1e-2, 1);
 total_runs = length(lambda_values)*length(Lval_values)* ...
              length(RoC_values)*length(NA_values)*length(Lz_values);
 
-results = zeros(total_runs,6);
+results = zeros(total_runs,9);
 % [lambda, Lval, RoC, NA, Lz, power]
 
 run_id = 1;
@@ -97,20 +97,71 @@ for iz = 1:length(Lz_values)
     %P.n_background = n_fa;
     P = initializeRIfromFunction(P,@calcRI,{n_core,a_core,n_clad,a_clad});
 
-    %% Propagation
-    P.updates = ceil(P.Lz/updatestepsize);
 
-    %% Run BPM
+    %% =====================================================
+    %% Adiabatic transition from straight fiber to target RoC
+    %% =====================================================
+    
+    RoC_final = P.bendingRoC;
+    
+    % Initial straight launch section
+    P.bendingRoC = Inf;
+    P.bendDirection = 0;
+    
+    Nseg = 20; %number of segments
+    Lz_straight = 1e-3; %initial straight launch
+    Lz_ramp_total = 4e-3;
+
+    P.Lz = Lz_straight;
+    P.updates = ceil(P.Lz/updatestepsize);
+    
+    P = FD_BPM(P);
+    
+    % Radius ramp (large -> final)
+    RoC_ramp = 1 ./ linspace(0,1/RoC_final,Nseg+1);
+    RoC_ramp(1) = Inf;
+    RoC_ramp = RoC_ramp(2:end);
+
+    % Total adiabatic length
+    Lz_seg = Lz_ramp_total/Nseg;
+    
+    for k = 1:Nseg
+    
+        P.bendingRoC = RoC_ramp(k);
+        P.Lz = Lz_seg;
+        P.updates = ceil(P.Lz/updatestepsize);
+    
+        P = FD_BPM(P);
+    
+    end
+
+    %store data of power without insertion loss
+    Powerafterinjection = P.powers(end);
+    
+    %% Main bent section
+    P.bendingRoC = RoC_final;
+    P.Lz = Lz-Lz_straight-Lz_ramp_total;
+    P.updates = ceil(P.Lz/updatestepsize);
+    
     P = FD_BPM(P);
 
     %% Store results
+    %Modify data for storage
+    ZoneCalc = Lval*1e6/sqrt(2);
+    Loss_dB = -10*log10(P.powers(end)/Powerafterinjection);
+    dbsurm = Loss_dB/(Lz-Lz_straight-Lz_ramp_total);
+    
+    %store
     results(run_id,:) = [
-        lambda*1e9,...
-        Lval*1e6,...
-        RoC*1e3,...
         NA,...
-        Lz*1e3,...
-        P.powers(end)
+        lambda*1e9,...
+        Lz,...
+        Lval*1e6,...
+        ZoneCalc,...
+        RoC*1e3,...
+        P.powers(end),...
+        dbsurm,...
+        Powerafterinjection
     ];
 
     run_id = run_id + 1;
@@ -126,12 +177,15 @@ end
 %% -------------------------------
 results_table = array2table(results,...
     'VariableNames', { ...
-    'Wavelength_nm',...
-    'Lval_um',...
-    'RoC_mm',...
     'NA',...
-    'Lz_mm',...
-    'FinalPower'});
+    'Wavelength_nm',...
+    'Distance (m)',...
+    'Lval_um',...
+    'Zone calcul', ...
+    'RoC_mm',...
+    'FinalPower',...
+    'db/m',...
+    'PowerAfterInsertion'});
 
 %% -------------------------------
 %% 💾 Save file
