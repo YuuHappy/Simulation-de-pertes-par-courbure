@@ -481,7 +481,7 @@ void applyMultiplier(struct parameters *P_global, long iz, struct debug *D) {
     /*
     float n_bend = CREALF(n) * (1 - (sqrf(CREALF(n)) * (x * P->cosBendDirection + y * P->sinBendDirection) / 2 / P->RoC * P->rho_e)) * exp((x * P->cosBendDirection + y * P->sinBendDirection) / P->RoC);
     */
-    /*x_trans from Schermer 2007*/
+    /*x_trans from Schermer 2007, définit une distance du centre à partir duquel on doit appliquer le truncate */
     float x_trans = P->RoC * (P->n_eff / P->n_clad - 1.0f);
 
     /* only truncate cladding region */

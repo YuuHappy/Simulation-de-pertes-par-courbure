@@ -10,8 +10,8 @@ tic;
 %% 🔁 Sweep parameters
 %% -------------------------------
 lambda_values = linspace(1060e-9, 1060e-9, 1);
-Lval_values   = linspace(45e-6, 45e-6, 1);
-RoC_values    = linspace(40.0e-3, 40.0e-3, 1);
+Lval_values   = linspace(55e-6, 55e-6, 1);
+RoC_values    = linspace(27.5e-3, 27.5e-3, 1);
 NA_values     = linspace(0.0779, 0.0779, 1); 
 Lz_values     = linspace(1e-2, 1e-2, 1);  
 
