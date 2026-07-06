@@ -1,0 +1,6 @@
+VO= original
+V1 = modif avec x_caustic
+v2= modif avec copilot pour régler problème
+v3 :redemande à autre Copilot de faire le code original modifié
+v4: remodify avec copilot
+v5: ;ui ai envoyé le crash log, il a modif des NaN et Inf

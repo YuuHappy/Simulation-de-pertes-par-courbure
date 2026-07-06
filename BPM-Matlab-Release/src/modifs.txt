@@ -1,0 +1,9 @@
+modif1: changer le exp pour pas exponentiel, ajouter un x_caustic comme schermer
+
+modif2: v2, modif avec copilot pour régler le problème
+
+modif3: redemander au premier copilot de print le whole code
+
+VO = VO
+
+normal = modif exponentielle shermer et truncated

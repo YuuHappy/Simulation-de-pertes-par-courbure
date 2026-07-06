@@ -1,0 +1,5 @@
+Pour leur formule de n modifié lorsque la fibre est courbée, ils utilisent un rayon de courbure effectif qui prend en compte le stress mécanique. Pour tester, on pourrait modifier les paramètres de stress pour prendre en considération l'effet des rods de bore dans la fibre sur le stress. Je ne sais pas comment ça influencerait mais ça serait intéressant d'analyser.
+Marcuse vs Shermer vs BPM rayon effectif
+Lval basses voir si on cadre
+
+changer le n eff en considérant le xtrans

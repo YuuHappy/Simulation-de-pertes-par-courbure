@@ -1,0 +1,8 @@
+Copy_of:
+
+
+Ajout de :
+
+model.n_eff  = 1.446;   % example value
+model.n_clad = 1.44;    % cladding index
+model.R_eff  = 10000;   % in microns (example)

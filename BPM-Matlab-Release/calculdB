@@ -1,0 +1,9 @@
+import math
+
+def pertes_1m(pertes, dist):
+    return 1-(1-pertes)*(dist**-1)
+
+def dB_to_percent(percent):
+    return 10*math.log10(percent)
+
+print(dB_to_percent(pertes_1m(0.995922, 0.01)))
