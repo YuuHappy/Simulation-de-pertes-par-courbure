@@ -5,6 +5,27 @@ clc
 tic;
 
 
+%% Ask user for output folder name
+
+folderName = input('Enter output folder name: ','s');
+
+if isempty(folderName)
+    folderName = datestr(now,'yyyy-mm-dd_HH-MM-SS');
+end
+
+% Prevent overwriting existing folder
+baseFolder = folderName;
+counter = 1;
+
+while exist(folderName,'dir')
+    folderName = sprintf('%s_%d',baseFolder,counter);
+    counter = counter + 1;
+end
+
+mkdir(folderName);
+
+fprintf('Results will be saved in:\n%s\n\n',folderName);
+
 
 %% -------------------------------
 %% 🔁 Sweep parameters
@@ -50,7 +71,7 @@ for iz = 1:length(Lz_values)
     %% ---------------------------
     P = BPMmatlab.model;
 
-    P.name = 'FD_BPM_sweep';
+    P.name = fullfile(folderName, folderName);
     P.useAllCPUs = true;   % ✅ you CAN use all CPUs now
     P.useGPU = false;
     P.calcModeOverlaps = false;
@@ -115,6 +136,8 @@ for iz = 1:length(Lz_values)
     P.Lz = Lz_straight;
     P.updates = ceil(P.Lz/updatestepsize);
     
+    P.figTitle = 'Straight';
+    
     P = FD_BPM(P);
     
     % Radius ramp (large -> final)
@@ -130,7 +153,9 @@ for iz = 1:length(Lz_values)
         P.bendingRoC = RoC_ramp(k);
         P.Lz = Lz_seg;
         P.updates = ceil(P.Lz/updatestepsize);
-    
+        
+        P.figTitle = sprintf('Ramp %d/%d | RoC=%.2f mm',k,Nseg,P.bendingRoC*1e3);
+
         P = FD_BPM(P);
     
     end
@@ -143,6 +168,9 @@ for iz = 1:length(Lz_values)
     P.Lz = Lz-Lz_straight-Lz_ramp_total;
     P.updates = ceil(P.Lz/updatestepsize);
     
+    
+    P.figTitle = sprintf('Main bend | RoC=%.2f mm', P.bendingRoC*1e3);
+
     P = FD_BPM(P);
 
     %% Store results
@@ -198,9 +226,46 @@ while isfile(filename)
     counter = counter + 1;
 end
 
-writetable(results_table, filename);
+csvfile = fullfile(folderName,[folderName '.csv']);
+writetable(results_table,csvfile)
 
-fprintf('\n✅ Sweep complete → %s\n', filename);
+
+figure;
+plot(P.z,P.powers,'LineWidth',2);
+grid on
+
+xlabel('Propagation distance [m]')
+ylabel('Relative power remaining')
+title('Power Evolution')
+
+exportgraphics( ...
+    gcf,...
+    fullfile(folderName,[folderName '_Power.png']),...
+    'Resolution',300)
+
+
+fprintf('\n✅ Sweep complete → %s\n', csvfile);
+
+hPower = figure('Visible','off');
+
+plot(P.z,P.powers,'LineWidth',2);
+hold on;
+
+xline(Lz_straight,'--k','Straight End');
+xline(Lz_straight + Lz_ramp_total,'--r','Ramp End');
+
+grid on;
+
+xlabel('Propagation distance [m]');
+ylabel('Relative power remaining');
+title('Relative Power Evolution');
+
+exportgraphics( ...
+    hPower,...
+    fullfile(folderName,[folderName '_Power.png']),...
+    'Resolution',300);
+
+close(hPower);
 
 elapsedTime = toc;
 fprintf('⏱️ Total time: %.2f seconds\n', elapsedTime);

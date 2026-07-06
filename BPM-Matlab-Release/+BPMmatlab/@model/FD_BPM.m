@@ -39,14 +39,6 @@ if P.xSymmetry ~= 0 && ~isinf(P.bendingRoC) && sind(P.bendDirection) || ...
   error('The specified bending direction is inconsistent with the symmetry assumption');
 end
 
-if P.saveVideo
-  if isempty(P.videoHandle)
-    P.videoHandle = VideoWriter([P.name '.avi']);  % If videoHandle is empty, we create it
-    P.videoHandle.FrameRate = 5;
-    open(P.videoHandle);
-  end
-end
-
 %% Check for GPU compatibility if needed
 if P.useGPU
   if ~ispc
@@ -205,6 +197,14 @@ multiplier = single(exp(-dz*max(0,max(abs(Y) - yEdge,abs(X) - xEdge)).^2*P.alpha
 
 %% Figure initialization
 h_f = figure(P.figNum);clf reset;
+
+% GIF filename
+gifFile = [P.name '.gif'];
+
+if ~P.priorData && isfile(gifFile)
+    delete(gifFile);
+end
+
 if strcmp(h_f.WindowStyle,'normal') 
   h_f.WindowState = 'maximized';
 end
@@ -320,9 +320,15 @@ ylabel('y [m]');
 title('Phase [rad]');
 setColormap(gca,P.phaseColormap);
 
+
 if ~verLessThan('matlab','9.5')
-  sgtitle(P.figTitle,'FontSize',15,'FontWeight','bold');
+    sgtitle( ...
+        sprintf('%s   |   Lz = %.3f mm', ...
+        P.figTitle, P.Lz*1e3), ...
+        'FontSize',15,...
+        'FontWeight','bold');
 end
+
 
 drawnow;
 
@@ -411,11 +417,37 @@ for updidx = 1:length(zUpdateIdxs)
       h_overlapplot(iMode).YData = P.modeOverlaps(iMode,:);
     end
   end
+    
+    idx = length(P.powers) - length(zUpdateIdxs) + updidx;
+    currentZ = P.z(idx);
+    
+    if ~verLessThan('matlab','9.5')
+    
+        sgtitle( ...
+            sprintf('%s | z = %.3f mm', ...
+            P.figTitle,...
+            currentZ*1e3), ...
+            'FontSize',15,...
+            'FontWeight','bold');
+    
+    end
+
   drawnow;
-  
-
-  intensityHistory{updidx} = abs(E).^2;   
-
+  frame = getframe(h_f);
+    img = frame2im(frame);
+    [imind,cm] = rgb2ind(img,256);
+    
+    if ~isfile(gifFile)
+        imwrite(imind,cm,gifFile,...
+            'gif',...
+            'LoopCount',inf,...
+            'DelayTime',0.05);
+    else
+        imwrite(imind,cm,gifFile,...
+            'gif',...
+            'WriteMode','append',...
+            'DelayTime',0.05);
+    end
 
   if P.saveVideo
     frame = getframe(h_f); 
@@ -509,10 +541,6 @@ P.n.ySymmetry = P.ySymmetry;
 
 P.priorData = true;
 
-save (sprintf('Lz_%0.6g.mat',P.Lz), ...
-     'intensityHistory', ...
-     'P', ...
-     '-v7.3');
 end
 
 
