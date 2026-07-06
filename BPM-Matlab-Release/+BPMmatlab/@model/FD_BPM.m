@@ -323,6 +323,7 @@ setColormap(gca,P.phaseColormap);
 if ~verLessThan('matlab','9.5')
   sgtitle(P.figTitle,'FontSize',15,'FontWeight','bold');
 end
+
 drawnow;
 
 if P.saveVideo
@@ -412,6 +413,10 @@ for updidx = 1:length(zUpdateIdxs)
   end
   drawnow;
   
+
+  intensityHistory{updidx} = abs(E).^2;   
+
+
   if P.saveVideo
     frame = getframe(h_f); 
     writeVideo(P.videoHandle,frame); 
@@ -503,7 +508,14 @@ P.n.xSymmetry = P.xSymmetry;
 P.n.ySymmetry = P.ySymmetry;
 
 P.priorData = true;
+
+save (sprintf('Lz_%0.6g.mat',P.Lz), ...
+     'intensityHistory', ...
+     'P', ...
+     '-v7.3');
 end
+
+
 
 function checkMexInputs(E,P)
 typename = 'single';

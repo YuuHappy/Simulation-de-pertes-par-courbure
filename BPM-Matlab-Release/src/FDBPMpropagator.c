@@ -485,7 +485,7 @@ void applyMultiplier(struct parameters *P_global, long iz, struct debug *D) {
     float x_trans = P->RoC * (P->n_eff / P->n_clad - 1.0f);
 
     /* only truncate cladding region */
-    const float tol = 1e-5f;
+    /*const float tol = 1e-5f;
     
     if (n_local <= P->n_clad + tol)
     {
@@ -493,7 +493,7 @@ void applyMultiplier(struct parameters *P_global, long iz, struct debug *D) {
             n_bend = P->n_eff;
     }
     
-    
+    */
     floatcomplex a = P->multiplier[i]*CEXPF(P->d*(CIMAGF(n) + (sqrf(n_bend) - sqrf(P->n_0))*I/(2*P->n_0))); // Multiplier includes only the edge absorber
     P->E2[i] *= fieldCorrection*a;
     float anormsqr = sqrf(CREALF(a)) + sqrf(CIMAGF(a));
