@@ -120,8 +120,8 @@ for iz = 1:length(Lz_values)
     P = initializeRIfromFunction(P,@calcRI,{n_core,a_core,n_clad,a_clad});
     
     %% Main bent section
-    P.bendingRoC = RoC_final;
-    P.Lz = Lz-Lz_straight-Lz_ramp_total;
+    P.bendingRoC = RoC;
+    P.Lz = Lz;
     P.updates = ceil(P.Lz/updatestepsize);
     
     
@@ -138,9 +138,9 @@ for iz = 1:length(Lz_values)
     %% Store results
     %Modify data for storage
     ZoneCalc = Lval*1e6/sqrt(2);
-    Loss_dB = -10*log10(P.powers(end)/Powerafterinjection);
-    dbsurm = Loss_dB/(Lz-Lz_straight-Lz_ramp_total);
-    
+    Loss_dB = -10*log10(P.powers(end));
+    dbsurm = Loss_dB/(Lz);
+    Powerafterinjection = 1;
     %store
     results(run_id,:) = [
         NA,...
@@ -191,9 +191,6 @@ hPower = figure('Visible','off');
 
 plot(P.z,P.powers,'LineWidth',2);
 hold on;
-
-xline(Lz_straight,'--k','Straight End');
-xline(Lz_straight + Lz_ramp_total,'--r','Ramp End');
 
 grid on;
 
