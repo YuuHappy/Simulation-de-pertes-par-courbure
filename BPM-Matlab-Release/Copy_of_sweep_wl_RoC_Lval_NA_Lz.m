@@ -90,7 +90,7 @@ for iz = 1:length(Lz_values)
     P.Nx_main = round(200/50e-6*Lval);
     P.Ny_main = round(200/50e-6*Lval);
     P.padfactor = 1.5;
-    P.dz_target = 0.5e-6;
+    P.dz_target = 0.2e-6;
     P.alpha = 3e14;
 
     %% Fiber parameters
