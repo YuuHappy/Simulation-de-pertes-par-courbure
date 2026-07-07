@@ -2,16 +2,37 @@ clear all
 close all
 clc
 
-tic;
+sweepTimer = tic;
 
+
+%% Ask user for output folder name
+
+folderName = input('Enter output folder name: ','s');
+
+if isempty(folderName)
+    folderName = datestr(now,'yyyy-mm-dd_HH-MM-SS');
+end
+
+% Prevent overwriting existing folder
+baseFolder = folderName;
+counter = 1;
+
+while exist(folderName,'dir')
+    folderName = sprintf('%s_%d',baseFolder,counter);
+    counter = counter + 1;
+end
+
+mkdir(folderName);
+
+fprintf('Results will be saved in:\n%s\n\n',folderName);
 
 
 %% -------------------------------
 %% 🔁 Sweep parameters
 %% -------------------------------
 lambda_values = linspace(1060e-9, 1060e-9, 1);
-Lval_values   = linspace(45e-6, 45e-6, 1);
-RoC_values    = linspace(40.0e-3, 40.0e-3, 1);
+Lval_values   = linspace(55e-6, 55e-6, 1);
+RoC_values    = linspace(27.5e-3, 27.5e-3, 1);
 NA_values     = linspace(0.0779, 0.0779, 1); 
 Lz_values     = linspace(1e-2, 1e-2, 1);  
 
@@ -21,7 +42,7 @@ Lz_values     = linspace(1e-2, 1e-2, 1);
 total_runs = length(lambda_values)*length(Lval_values)* ...
              length(RoC_values)*length(NA_values)*length(Lz_values);
 
-results = zeros(total_runs,6);
+results = zeros(total_runs,9);
 % [lambda, Lval, RoC, NA, Lz, power]
 
 run_id = 1;
@@ -49,8 +70,9 @@ for iz = 1:length(Lz_values)
     %% Initialize model
     %% ---------------------------
     P = BPMmatlab.model;
+    P.saveVideo = true;
 
-    P.name = 'FD_BPM_sweep';
+    P.name = fullfile(folderName, folderName);
     P.useAllCPUs = true;   % ✅ you CAN use all CPUs now
     P.useGPU = false;
     P.calcModeOverlaps = false;
@@ -96,21 +118,40 @@ for iz = 1:length(Lz_values)
     %% Air cladding
     %P.n_background = n_fa;
     P = initializeRIfromFunction(P,@calcRI,{n_core,a_core,n_clad,a_clad});
-
-    %% Propagation
+    
+    %% Main bent section
+    P.bendingRoC = RoC_final;
+    P.Lz = Lz-Lz_straight-Lz_ramp_total;
     P.updates = ceil(P.Lz/updatestepsize);
+    
+    
+    P.figTitle = sprintf('Main bend | RoC=%.2f mm', P.bendingRoC*1e3);
 
-    %% Run BPM
     P = FD_BPM(P);
+    
+
+    if P.saveVideo && ~isempty(P.videoHandle)
+        close(P.videoHandle);
+    end
+
 
     %% Store results
+    %Modify data for storage
+    ZoneCalc = Lval*1e6/sqrt(2);
+    Loss_dB = -10*log10(P.powers(end)/Powerafterinjection);
+    dbsurm = Loss_dB/(Lz-Lz_straight-Lz_ramp_total);
+    
+    %store
     results(run_id,:) = [
-        lambda*1e9,...
-        Lval*1e6,...
-        RoC*1e3,...
         NA,...
-        Lz*1e3,...
-        P.powers(end)
+        lambda*1e9,...
+        Lz,...
+        Lval*1e6,...
+        ZoneCalc,...
+        RoC*1e3,...
+        P.powers(end),...
+        dbsurm,...
+        Powerafterinjection
     ];
 
     run_id = run_id + 1;
@@ -126,29 +167,48 @@ end
 %% -------------------------------
 results_table = array2table(results,...
     'VariableNames', { ...
-    'Wavelength_nm',...
-    'Lval_um',...
-    'RoC_mm',...
     'NA',...
-    'Lz_mm',...
-    'FinalPower'});
+    'Wavelength_nm',...
+    'Distance (m)',...
+    'Lval_um',...
+    'Zone calcul', ...
+    'RoC_mm',...
+    'FinalPower',...
+    'db/m',...
+    'PowerAfterInsertion'});
 
 %% -------------------------------
 %% 💾 Save file
 %% -------------------------------
-filename = 'sweep_full.csv';
-counter = 1;
 
-while isfile(filename)
-    filename = sprintf('sweep_full_%d.csv', counter);
-    counter = counter + 1;
-end
+csvfile = fullfile(folderName,[folderName '_data.csv']);
+writetable(results_table,csvfile)
 
-writetable(results_table, filename);
 
-fprintf('\n✅ Sweep complete → %s\n', filename);
+fprintf('\n✅ Sweep complete → %s\n', folderName);
 
-elapsedTime = toc;
+hPower = figure('Visible','off');
+
+plot(P.z,P.powers,'LineWidth',2);
+hold on;
+
+xline(Lz_straight,'--k','Straight End');
+xline(Lz_straight + Lz_ramp_total,'--r','Ramp End');
+
+grid on;
+
+xlabel('Propagation distance [m]');
+ylabel('Relative power remaining');
+title('Relative Power Evolution');
+
+exportgraphics( ...
+    hPower,...
+    fullfile(folderName,[folderName '_Power.png']),...
+    'Resolution',300);
+
+close(hPower);
+
+elapsedTime = toc(sweepTimer);
 fprintf('⏱️ Total time: %.2f seconds\n', elapsedTime);
 
 
