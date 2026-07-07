@@ -39,6 +39,18 @@ if P.xSymmetry ~= 0 && ~isinf(P.bendingRoC) && sind(P.bendDirection) || ...
   error('The specified bending direction is inconsistent with the symmetry assumption');
 end
 
+%%Video enabling
+if P.saveVideo
+    if isempty(P.videoHandle)
+
+        P.videoHandle = VideoWriter([P.name '_vid.mp4'],'MPEG-4');
+
+        P.videoHandle.FrameRate = 10;
+
+        open(P.videoHandle);
+    end
+end
+
 %% Check for GPU compatibility if needed
 if P.useGPU
   if ~ispc
@@ -198,15 +210,8 @@ multiplier = single(exp(-dz*max(0,max(abs(Y) - yEdge,abs(X) - xEdge)).^2*P.alpha
 %% Figure initialization
 h_f = figure(P.figNum);clf reset;
 
-% GIF filename
-gifFile = [P.name '.gif'];
-
-if ~P.priorData && isfile(gifFile)
-    delete(gifFile);
-end
-
 if strcmp(h_f.WindowStyle,'normal') 
-  h_f.WindowState = 'maximized';
+  h_f.Position = [100 100 1200 800];
 end
 
 xlims = ([-1 1] + (P.ySymmetry ~= 0))*Lx/(2*P.plotZoom);
@@ -321,13 +326,18 @@ title('Phase [rad]');
 setColormap(gca,P.phaseColormap);
 
 
+
+initialZ = P.z(end-length(zUpdateIdxs));
+
 if ~verLessThan('matlab','9.5')
     sgtitle( ...
-        sprintf('%s   |   Lz = %.3f mm', ...
-        P.figTitle, P.Lz*1e3), ...
+        sprintf('%s | z = %.3f mm', ...
+        P.figTitle,...
+        initialZ*1e3), ...
         'FontSize',15,...
         'FontWeight','bold');
 end
+
 
 
 drawnow;
@@ -421,33 +431,14 @@ for updidx = 1:length(zUpdateIdxs)
     idx = length(P.powers) - length(zUpdateIdxs) + updidx;
     currentZ = P.z(idx);
     
-    if ~verLessThan('matlab','9.5')
-    
-        sgtitle( ...
-            sprintf('%s | z = %.3f mm', ...
-            P.figTitle,...
-            currentZ*1e3), ...
+    if ~verLessThan('matlab','9.5')      
+        sgtitle(sprintf('%s | z = %.3f mm', ...
+            P.figTitle,currentZ*1e3), ...
             'FontSize',15,...
             'FontWeight','bold');
-    
     end
 
   drawnow;
-  frame = getframe(h_f);
-    img = frame2im(frame);
-    [imind,cm] = rgb2ind(img,256);
-    
-    if ~isfile(gifFile)
-        imwrite(imind,cm,gifFile,...
-            'gif',...
-            'LoopCount',inf,...
-            'DelayTime',0.05);
-    else
-        imwrite(imind,cm,gifFile,...
-            'gif',...
-            'WriteMode','append',...
-            'DelayTime',0.05);
-    end
 
   if P.saveVideo
     frame = getframe(h_f); 

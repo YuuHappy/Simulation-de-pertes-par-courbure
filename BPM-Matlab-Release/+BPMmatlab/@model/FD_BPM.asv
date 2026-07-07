@@ -39,6 +39,18 @@ if P.xSymmetry ~= 0 && ~isinf(P.bendingRoC) && sind(P.bendDirection) || ...
   error('The specified bending direction is inconsistent with the symmetry assumption');
 end
 
+%%Video enabling
+if P.saveVideo
+    if isempty(P.videoHandle)
+
+        P.videoHandle = VideoWriter([P.name '.mp4'],'MPEG-4');
+
+        P.videoHandle.FrameRate = 10;
+
+        open(P.videoHandle);
+    end
+end
+
 %% Check for GPU compatibility if needed
 if P.useGPU
   if ~ispc
@@ -198,11 +210,8 @@ multiplier = single(exp(-dz*max(0,max(abs(Y) - yEdge,abs(X) - xEdge)).^2*P.alpha
 %% Figure initialization
 h_f = figure(P.figNum);clf reset;
 
-% GIF filename
-gifFile = [P.name '.gif'];
-
 if strcmp(h_f.WindowStyle,'normal') 
-  h_f.WindowState = 'maximized';
+  h_f.Position = [100 100 1200 800];
 end
 
 xlims = ([-1 1] + (P.ySymmetry ~= 0))*Lx/(2*P.plotZoom);
@@ -318,11 +327,11 @@ setColormap(gca,P.phaseColormap);
 
 
 if ~verLessThan('matlab','9.5')
-    sgtitle( ...
-        sprintf('%s   |   Lz = %.3f mm', ...
-        P.figTitle, P.Lz*1e3), ...
-        'FontSize',15,...
-        'FontWeight','bold');
+        sgtitle( ...
+            sprintf('%s', ...
+            P.figTitle), ...
+            'FontSize',15,...
+            'FontWeight','bold');
 end
 
 
@@ -419,26 +428,12 @@ for updidx = 1:length(zUpdateIdxs)
     
     if ~verLessThan('matlab','9.5')
     
-        if isfield(P,'sectionLabel')
-            sgtitle( ...
-                sprintf('%s | z = %.3f mm', ...
-                P.sectionLabel,...
-                currentZ*1e3), ...
-                'FontSize',15,...
-                'FontWeight','bold');
-        else
-            sgtitle( ...
-                sprintf('z = %.3f mm', ...
-                currentZ*1e3), ...
-                'FontSize',15,...
-                'FontWeight','bold');
-        end
+        P.figTitle = sprintf('Ramp %d/%d | RoC=%.2f mm | z = %.3f mm', ...
+            k,Nseg,P.bendingRoC*1e3, currentZ*1e3);
     
     end
 
   drawnow;
-  
-  intensityHistory{updidx} = abs(E).^2;   
 
   if P.saveVideo
     frame = getframe(h_f); 
@@ -532,10 +527,6 @@ P.n.ySymmetry = P.ySymmetry;
 
 P.priorData = true;
 
-save (sprintf('Lz_%0.6g.mat',P.Lz), ...
-     'intensityHistory', ...
-     'P', ...
-     '-v7.3');
 end
 
 

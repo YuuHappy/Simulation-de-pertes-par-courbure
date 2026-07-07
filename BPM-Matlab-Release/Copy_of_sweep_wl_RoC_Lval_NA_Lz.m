@@ -70,6 +70,7 @@ for iz = 1:length(Lz_values)
     %% Initialize model
     %% ---------------------------
     P = BPMmatlab.model;
+    P.saveVideo = true;
 
     P.name = fullfile(folderName, folderName);
     P.useAllCPUs = true;   % ✅ you CAN use all CPUs now
@@ -154,7 +155,8 @@ for iz = 1:length(Lz_values)
         P.Lz = Lz_seg;
         P.updates = ceil(P.Lz/updatestepsize);
         
-        P.figTitle = sprintf('Ramp %d/%d | RoC=%.2f mm',k,Nseg,P.bendingRoC*1e3);
+        P.figTitle = sprintf('Ramp %d/%d | RoC=%.2f mm', ...
+            k,Nseg,P.bendingRoC*1e3);
 
         P = FD_BPM(P);
     
@@ -172,6 +174,12 @@ for iz = 1:length(Lz_values)
     P.figTitle = sprintf('Main bend | RoC=%.2f mm', P.bendingRoC*1e3);
 
     P = FD_BPM(P);
+    
+
+    if P.saveVideo && ~isempty(P.videoHandle)
+        close(P.videoHandle);
+    end
+
 
     %% Store results
     %Modify data for storage
@@ -218,30 +226,9 @@ results_table = array2table(results,...
 %% -------------------------------
 %% 💾 Save file
 %% -------------------------------
-filename = 'sweep_full.csv';
-counter = 1;
 
-while isfile(filename)
-    filename = sprintf('sweep_full_%d.csv', counter);
-    counter = counter + 1;
-end
-
-csvfile = fullfile(folderName,[folderName '.csv']);
+csvfile = fullfile(folderName,[folderName '_data.csv']);
 writetable(results_table,csvfile)
-
-
-figure;
-plot(P.z,P.powers,'LineWidth',2);
-grid on
-
-xlabel('Propagation distance [m]')
-ylabel('Relative power remaining')
-title('Power Evolution')
-
-exportgraphics( ...
-    gcf,...
-    fullfile(folderName,[folderName '_Power.png']),...
-    'Resolution',300)
 
 
 fprintf('\n✅ Sweep complete → %s\n', csvfile);
