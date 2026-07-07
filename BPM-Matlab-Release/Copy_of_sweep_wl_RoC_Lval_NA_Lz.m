@@ -2,7 +2,7 @@ clear all
 close all
 clc
 
-tic;
+sweepTimer = tic;
 
 
 %% Ask user for output folder name
@@ -231,7 +231,7 @@ csvfile = fullfile(folderName,[folderName '_data.csv']);
 writetable(results_table,csvfile)
 
 
-fprintf('\n✅ Sweep complete → %s\n', csvfile);
+fprintf('\n✅ Sweep complete → %s\n', folderName);
 
 hPower = figure('Visible','off');
 
@@ -254,7 +254,7 @@ exportgraphics( ...
 
 close(hPower);
 
-elapsedTime = toc;
+elapsedTime = toc(sweepTimer);
 fprintf('⏱️ Total time: %.2f seconds\n', elapsedTime);
 
 
