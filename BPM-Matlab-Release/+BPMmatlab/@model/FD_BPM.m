@@ -211,7 +211,7 @@ multiplier = single(exp(-dz*max(0,max(abs(Y) - yEdge,abs(X) - xEdge)).^2*P.alpha
 h_f = figure(P.figNum);clf reset;
 
 if strcmp(h_f.WindowStyle,'normal') 
-  h_f.Position = [100 100 1200 800];
+  h_f.WindowState = 'maximized';
 end
 
 xlims = ([-1 1] + (P.ySymmetry ~= 0))*Lx/(2*P.plotZoom);

@@ -34,7 +34,7 @@ lambda_values = linspace(1060e-9, 1060e-9, 1);
 Lval_values   = linspace(55e-6, 55e-6, 1);
 RoC_values    = linspace(27.5e-3, 27.5e-3, 1);
 NA_values     = linspace(0.0779, 0.0779, 1); 
-Lz_values     = linspace(1e-2, 1e-2, 1);  
+Lz_values     = linspace(5e-2, 5e-2, 1);  
 
 %% -------------------------------
 %% 📦 Preallocate results
@@ -90,7 +90,7 @@ for iz = 1:length(Lz_values)
     P.Nx_main = round(200/50e-6*Lval);
     P.Ny_main = round(200/50e-6*Lval);
     P.padfactor = 1.5;
-    P.dz_target = 0.2e-6;
+    P.dz_target = 0.5e-6;
     P.alpha = 3e14;
 
     %% Fiber parameters
