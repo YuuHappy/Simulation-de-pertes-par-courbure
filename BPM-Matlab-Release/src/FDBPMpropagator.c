@@ -126,6 +126,7 @@ struct parameters {
   float EfieldPower;
   float n_eff;
   float n_clad;
+  float *n_bend_out;
 };
 
 #ifdef __NVCC__ // If compiling for CUDA
@@ -492,6 +493,7 @@ void applyMultiplier(struct parameters *P_global, long iz, struct debug *D) {
         if (xb > x_trans)
             n_bend = P->n_eff;
     }
+    P->n_bend_out[i] = n_bend;
     
     
     floatcomplex a = P->multiplier[i]*CEXPF(P->d*(CIMAGF(n) + (sqrf(n_bend) - sqrf(P->n_0))*I/(2*P->n_0))); // Multiplier includes only the edge absorber
@@ -638,6 +640,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, mxArray const *prhs[]) {
   dimPtr = mxGetDimensions(prhs[0]);
   P->Efinal = (floatcomplex *)mxGetData(plhs[0] = mxCreateNumericArray(2,dimPtr,mxSINGLE_CLASS,mxCOMPLEX)); // Output E field
   P->n_out = (floatcomplex *)mxGetData(plhs[1] = mxCreateNumericArray(2,dimPtr,mxSINGLE_CLASS,mxCOMPLEX)); // Output refractive index
+  P->n_bend_out =(float*)mxGetData(plhs[3] =mxCreateNumericArray(2,dimPtr,mxSINGLE_CLASS,mxREAL));
   P->precisePower = (float)mxGetScalar(mxGetField(prhs[1],0,"inputPrecisePower"));
   #ifndef __NVCC__
   P->E2 = (floatcomplex *)((P->iz_end - P->iz_start)%2? P->Efinal: malloc(P->Nx*P->Ny*sizeof(floatcomplex)));

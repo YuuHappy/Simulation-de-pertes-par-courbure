@@ -172,7 +172,7 @@ if Nz_n > 1
   y_n = getGridArray(Ny_n,dy,P.xSymmetry);
   z_n = dz_n*(0:Nz_n-1);
   plotVolumetric(201,x_n,y_n,z_n,real(n),'BPM-Matlab_RI');
-  title('Real part of refractive index');xlabel('x [m]');ylabel('y [m]');zlabel('z [m]');
+  title('Bent refractive index');xlabel('x [m]');ylabel('y [m]');zlabel('z [m]');
 end
 
 %% Calculate z step size and positions
@@ -391,7 +391,7 @@ for updidx = 1:length(zUpdateIdxs)
   if P.useGPU
     [E,n_slice,precisePower] = FDBPMpropagator_CUDA(E,mexParameters);
   else
-    [E,n_slice,precisePower] = FDBPMpropagator(E,mexParameters);
+    [E,n_slice,precisePower,n_bend] = FDBPMpropagator(E,mexParameters);
   end
   timeInMex = timeInMex + toc - beforeMex;
   if P.storeE3D
@@ -399,7 +399,8 @@ for updidx = 1:length(zUpdateIdxs)
   end
   
   %% Update figure contents
-  h_im1.CData = real(n_slice(ix_plot,iy_plot)).'; % Refractive index at this update
+  disp(size(n_bend))
+  h_im1.CData = n_bend(ix_plot,iy_plot).'; % Refractive index at this update
   h_im3a.CData = abs(E(ix_plot,iy_plot).').^2; % Intensity at this update
   h_im3b.CData = angle(E(ix_plot,iy_plot).'); % Phase at this update
   h_im3b.AlphaData = max(0,(1+log10(abs(E(ix_plot,iy_plot).'/max(abs(E(:)))).^2)/3));  %Logarithmic transparency in displaying phase outside cores
@@ -412,6 +413,14 @@ for updidx = 1:length(zUpdateIdxs)
   if P.n_colorlimits(2) > P.n_colorlimits(1) % Default is [0 0], so false
     h_axis1.CLim = P.n_colorlimits;
   end
+
+  fprintf('n min/max      : %.8f  %.8f\n', ...
+    min(real(n_slice(:))), ...
+    max(real(n_slice(:))));
+
+   fprintf('n_bend min/max : %.8f  %.8f\n', ...
+    min(n_bend(:)), ...
+    max(n_bend(:)));
 
   mexParameters.inputPrecisePower = precisePower;
   P.powers(end-length(zUpdateIdxs)+updidx) = precisePower/powerFraction;
