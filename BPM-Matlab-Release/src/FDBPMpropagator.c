@@ -480,9 +480,10 @@ void applyMultiplier(struct parameters *P_global, long iz, struct debug *D) {
     float n_bend = n_local * (1 - (sqrf(n_local) * xb / 2 / P->RoC * P->rho_e)) * (1+xb / P->RoC);
     
     /*float n_bend = CREALF(n) * (1 - (sqrf(CREALF(n)) * (x * P->cosBendDirection + y * P->sinBendDirection) / 
-    2 / P->RoC * P->rho_e)) * exp((x * P->cosBendDirection + y * P->sinBendDirection) / P->RoC);
-    */
+    2 / P->RoC * P->rho_e)) * exp((x * P->cosBendDirection + y * P->sinBendDirection) / P->RoC);*/
+    
     /*x_trans from Schermer 2007, définit une distance du centre à partir duquel on doit appliquer le truncate */
+
     float x_trans = P->RoC * (P->n_eff / P->n_clad - 1.0f);
 
     /* only truncate cladding region */
@@ -490,11 +491,14 @@ void applyMultiplier(struct parameters *P_global, long iz, struct debug *D) {
     
     if (n_local <= P->n_clad + tol)
     {
+    if (n_local > 1.40f){
         if (xb > x_trans)
-            n_bend = P->n_eff;
+            n_bend = P->n_eff-0.00000001;
+        }
     }
-    P->n_bend_out[i] = n_bend;
     
+
+    P->n_bend_out[i] = n_bend;
     
     floatcomplex a = P->multiplier[i]*CEXPF(P->d*(CIMAGF(n) + (sqrf(n_bend) - sqrf(P->n_0))*I/(2*P->n_0))); // Multiplier includes only the edge absorber
     P->E2[i] *= fieldCorrection*a;

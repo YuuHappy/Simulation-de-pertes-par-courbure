@@ -31,8 +31,8 @@ fprintf('Results will be saved in:\n%s\n\n',folderName);
 %% 🔁 Sweep parameters
 %% -------------------------------
 lambda_values = linspace(1060e-9, 1060e-9, 1);
-Lval_values   = linspace(55e-6, 55e-6, 1);
-RoC_values    = linspace(27.5e-3, 27.5e-3, 1);
+Lval_values   = linspace(75e-6, 75e-6, 1);
+RoC_values    = linspace(15.5e-3, 15.5e-3, 1);
 NA_values     = linspace(0.0779, 0.0779, 1); 
 Lz_values     = linspace(1e-2, 1e-2, 1);  
 
@@ -110,7 +110,8 @@ for iz = 1:length(Lz_values)
     %% Modes
     P.bendDirection = 0;
     P = findModes(P,8);
-    %P.n_eff = n_core*P.modes(1).neff;
+    P.n_eff = P.modes(1).neff;
+    fprintf('N_eff is %.5f\n', P.n_eff);
 
     %% Inject LP01
     P.E = P.modes(1);

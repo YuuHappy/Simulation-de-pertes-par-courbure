@@ -244,7 +244,7 @@ if P.n_colorlimits(2) > P.n_colorlimits(1) % Default is [0 0], so false
 end
 xlabel('x [m]');
 ylabel('y [m]');
-title('Real part of refractive index');
+title('Bent refractive index profile');
 
 if P.xSymmetry ~= 0
   y0idx = 1;
@@ -399,7 +399,6 @@ for updidx = 1:length(zUpdateIdxs)
   end
   
   %% Update figure contents
-  disp(size(n_bend))
   h_im1.CData = n_bend(ix_plot,iy_plot).'; % Refractive index at this update
   h_im3a.CData = abs(E(ix_plot,iy_plot).').^2; % Intensity at this update
   h_im3b.CData = angle(E(ix_plot,iy_plot).'); % Phase at this update
