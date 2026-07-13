@@ -1,2 +1,2 @@
-NA,Wavelength_nm,Distance (m),Lval_um,Zone calcul,RoC_mm,FinalPower,db/m,PowerAfterInsertion
-0.0779,1060,0.01,55,38.8908729652601,27.5,0.895151912990904,48.1032558850096,1
+NA;Wavelength_nm;Distance (m);Lval_um;Zone calcul;RoC_mm;FinalPower;db/m;PowerAfterInsertion
+0.0779;1060;0.01;55;38.89087297;27.5;0.895151913;48.10325589;1
