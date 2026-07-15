@@ -30,11 +30,11 @@ fprintf('Results will be saved in:\n%s\n\n',folderName);
 %% -------------------------------
 %% 🔁 Sweep parameters
 %% -------------------------------
-lambda_values = linspace(1060e-9, 1060e-9, 1);
-Lval_values   = linspace(45e-6, 45e-6, 1);
+lambda_values = linspace(1000e-9, 1240e-9, 5);
+Lval_values   = linspace(55e-6, 55e-6, 1);
 RoC_values    = linspace(27.5e-3, 27.5e-3, 1);
 NA_values     = linspace(0.0779, 0.0779, 1); 
-Lz_values     = linspace(1e-2, 1e-2, 1);  
+Lz_values     = linspace(1e-2, 1e-1, 2);  
 
 %% -------------------------------
 %% 📦 Preallocate results
@@ -61,7 +61,15 @@ for iz = 1:length(Lz_values)
     RoC    = RoC_values(ir);
     NA     = NA_values(ina);
     Lz     = Lz_values(iz);
-
+    
+    if run_id>1
+        while exist(folderName,'dir')
+        folderName = sprintf('%s_%d',baseFolder,counter);
+        counter = counter + 1;
+        end
+        mkdir(folderName);
+        fprintf('Results will be saved in:\n%s\n\n',folderName);
+    end
     fprintf('Run %d/%d | λ=%.0f nm | L=%.1f um | RoC=%.1f mm | NA=%.3f | Lz=%.1f mm\n',...
         run_id, total_runs,...
         lambda*1e9, Lval*1e6, RoC*1e3, NA, Lz*1e3);
@@ -208,6 +216,27 @@ for iz = 1:length(Lz_values)
 
     run_id = run_id + 1;
 
+    hPower = figure('Visible','off');
+    
+    plot(P.z,P.powers,'LineWidth',2);
+    hold on;
+    
+    xline(Lz_straight,'--k','Straight End');
+    xline(Lz_straight + Lz_ramp_total,'--r','Ramp End');
+    
+    grid on;
+    
+    xlabel('Propagation distance [m]');
+    ylabel('Relative power remaining');
+    title('Relative Power Evolution');
+    
+    exportgraphics( ...
+        hPower,...
+        fullfile(folderName,[folderName '_Power.png']),...
+        'Resolution',300);
+    
+    close(hPower);
+
 end
 end
 end
@@ -238,27 +267,6 @@ writetable(results_table,csvfile)
 
 
 fprintf('\n✅ Sweep complete → %s\n', folderName);
-
-hPower = figure('Visible','off');
-
-plot(P.z,P.powers,'LineWidth',2);
-hold on;
-
-xline(Lz_straight,'--k','Straight End');
-xline(Lz_straight + Lz_ramp_total,'--r','Ramp End');
-
-grid on;
-
-xlabel('Propagation distance [m]');
-ylabel('Relative power remaining');
-title('Relative Power Evolution');
-
-exportgraphics( ...
-    hPower,...
-    fullfile(folderName,[folderName '_Power.png']),...
-    'Resolution',300);
-
-close(hPower);
 
 elapsedTime = toc(sweepTimer);
 fprintf('⏱️ Total time: %.2f seconds\n', elapsedTime);
