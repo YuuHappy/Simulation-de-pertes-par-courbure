@@ -30,11 +30,11 @@ fprintf('Results will be saved in:\n%s\n\n',folderName);
 %% -------------------------------
 %% 🔁 Sweep parameters
 %% -------------------------------
-lambda_values = linspace(1200e-9, 1400e-9, 5);
+lambda_values = linspace(850e-9, 1100e-9, 6);
 Lval_values   = linspace(55e-6, 55e-6, 1);
-RoC_values    = linspace(40.0e-3, 40.0e-3, 1);
+RoC_values    = linspace(20.0e-3, 20.0e-3, 1);
 NA_values     = linspace(0.0779, 0.0779, 1); 
-Lz_values     = linspace(1e-2, 1e-2, 1);  
+Lz_values     = linspace(1e-2, 1e-1, 2);  
 
 %% -------------------------------
 %% 📦 Preallocate results
