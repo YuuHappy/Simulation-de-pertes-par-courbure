@@ -210,8 +210,11 @@ multiplier = single(exp(-dz*max(0,max(abs(Y) - yEdge,abs(X) - xEdge)).^2*P.alpha
 %% Figure initialization
 h_f = figure(P.figNum);clf reset;
 
-if strcmp(h_f.WindowStyle,'normal') 
-  h_f.WindowState = 'maximized';
+if strcmp(h_f.WindowStyle,'normal')
+    h_f.WindowState = 'normal';
+    h_f.Units = 'pixels';
+    h_f.Position = [100 100 1920 956];
+    h_f.Resize = 'off';
 end
 
 xlims = ([-1 1] + (P.ySymmetry ~= 0))*Lx/(2*P.plotZoom);
@@ -344,7 +347,14 @@ drawnow;
 
 if P.saveVideo
   frame = getframe(h_f);  %Get the frames
-  writeVideo(P.videoHandle,frame);  %Stitch the frames to form a video and save
+  
+  [h,w,~] = size(frame.cdata);
+    
+    if h ~= 956 || w ~= 1920
+        frame.cdata = imresize(frame.cdata,[956 1920]);
+    end
+    
+    writeVideo(P.videoHandle,frame);
 end
 
 if P.calcModeOverlaps % Mode overlap figure
@@ -412,15 +422,15 @@ for updidx = 1:length(zUpdateIdxs)
   if P.n_colorlimits(2) > P.n_colorlimits(1) % Default is [0 0], so false
     h_axis1.CLim = P.n_colorlimits;
   end
+%%%
+  %fprintf('n min/max      : %.8f  %.8f\n', ...
+    %min(real(n_slice(:))), ...
+    %max(real(n_slice(:))));
 
-  fprintf('n min/max      : %.8f  %.8f\n', ...
-    min(real(n_slice(:))), ...
-    max(real(n_slice(:))));
-
-   fprintf('n_bend min/max : %.8f  %.8f\n', ...
-    min(n_bend(:)), ...
-    max(n_bend(:)));
-
+   %fprintf('n_bend min/max : %.8f  %.8f\n', ...
+   % min(n_bend(:)), ...
+  %  max(n_bend(:)));
+%%%
   mexParameters.inputPrecisePower = precisePower;
   P.powers(end-length(zUpdateIdxs)+updidx) = precisePower/powerFraction;
   h_plot2.YData = P.powers;
@@ -450,6 +460,13 @@ for updidx = 1:length(zUpdateIdxs)
 
   if P.saveVideo
     frame = getframe(h_f); 
+    [h,w,~] = size(frame.cdata);
+    
+    if h ~= 956 || w ~= 1920
+        frame.cdata = imresize(frame.cdata,[956 1920]);
+    end
+    
+    writeVideo(P.videoHandle,frame);
     writeVideo(P.videoHandle,frame); 
   end
 end
